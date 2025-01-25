@@ -116,11 +116,11 @@ export function VideoPlayer({ video, isActive = false }: VideoPlayerProps) {
       )}
 
       {/* Video Controls */}
-      <div className="absolute right-4 bottom-20 flex flex-col items-center gap-4">
+      <div className="absolute right-4 bottom-20 flex flex-col items-center gap-6">
         <Button
           variant="ghost"
           size="icon"
-          className="rounded-full bg-black/20 text-white hover:bg-black/40 w-12 h-12"
+          className="rounded-full bg-black/20 backdrop-blur-sm text-white hover:bg-black/40 w-12 h-12"
           onClick={handleLike}
         >
           <Heart className={`h-6 w-6 ${isLiked ? "fill-red-500 text-red-500" : ""}`} />
@@ -143,7 +143,7 @@ export function VideoPlayer({ video, isActive = false }: VideoPlayerProps) {
       </div>
 
       {/* Video Info */}
-      <div className="absolute bottom-4 left-4 right-16 text-white">
+      <div className="absolute bottom-8 left-4 right-16 text-white">
         <div className="flex items-center gap-3">
           <Avatar className="h-12 w-12 border-2 border-white">
             <AvatarImage src={video.user.image} />

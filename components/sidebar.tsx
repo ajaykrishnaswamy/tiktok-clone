@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Compass, Users, Upload, Activity, MessageCircle, User } from "lucide-react"
+import { Home, Compass, Users, Upload, Activity, MessageCircle, Video, User } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -14,15 +14,47 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { UserButton, SignInButton, useUser } from "@clerk/nextjs"
+import { UserButton, SignInButton, useUser, SignedIn, SignedOut } from "@clerk/nextjs"
 
 const menuItems = [
-  { icon: Home, label: "For You", href: "/" },
-  { icon: Compass, label: "Explore", href: "/explore" },
-  { icon: Users, label: "Following", href: "/following" },
-  { icon: Upload, label: "Upload", href: "/upload" },
-  { icon: Activity, label: "Activity", href: "/activity" },
-  { icon: MessageCircle, label: "Messages", href: "/messages" },
+  {
+    label: "For You",
+    href: "/",
+    icon: Home
+  },
+  {
+    label: "Explore",
+    href: "/explore",
+    icon: Compass
+  },
+  {
+    label: "Following",
+    href: "/following",
+    icon: Users
+  },
+  {
+    label: "LIVE",
+    href: "/live",
+    icon: Video
+  }
+]
+
+const secondaryItems = [
+  {
+    label: "Upload",
+    href: "/upload",
+    icon: Upload
+  },
+  {
+    label: "Activity",
+    href: "/activity",
+    icon: Activity
+  },
+  {
+    label: "Messages",
+    href: "/messages",
+    icon: MessageCircle
+  }
 ]
 
 export function AppSidebar() {
@@ -36,7 +68,7 @@ export function AppSidebar() {
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 725 725" className="w-8 h-8" fill="currentColor">
             <path d="M652 236c-49-1-95-23-127-60v267c0 157-127 284-284 284S-43 600-43 443 84 159 241 159c10 0 21 1 31 2v138c-10-2-21-3-31-3-92 0-166 74-166 166s74 166 166 166 166-74 166-166V0h142c9 71 64 127 135 137v99z" />
           </svg>
-          <span className="text-xl font-bold">TikTok Clone</span>
+          <span className="text-xl font-bold">TikTok</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>

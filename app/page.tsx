@@ -74,16 +74,23 @@ export default function Home() {
   }, [])
 
   return (
-    <div
-      ref={containerRef}
-      className="h-[100vh] overflow-y-scroll snap-y snap-mandatory"
-      style={{ scrollSnapType: "y mandatory" }}
-    >
-      {videos.map((video, index) => (
-        <div key={video.id} className="h-[100vh] snap-start snap-always">
-          <VideoPlayer video={video} isActive={currentVideoIndex === index} />
-        </div>
-      ))}
+    <div className="max-w-3xl mx-auto">
+      <div
+        ref={containerRef}
+        className="h-[calc(100vh-theme(spacing.16))] overflow-y-scroll snap-y snap-mandatory"
+      >
+        {videos.map((video, index) => (
+          <div 
+            key={video.id} 
+            className="h-full snap-start snap-always"
+          >
+            <VideoPlayer 
+              video={video} 
+              isActive={currentVideoIndex === index} 
+            />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

@@ -22,13 +22,15 @@ export default function RootLayout({
       <html lang="en">
         <body className={inter.className}>
           <SidebarProvider>
-            <div className="flex h-screen">
-              <AppSidebar />
-              <main className="flex-1 overflow-auto">
-                <div className="container mx-auto p-4">
-                  <SidebarTrigger />
-                  {children}
-                </div>
+            <div className="flex min-h-screen">
+              {/* Sidebar */}
+              <div className="fixed left-0 top-0 z-40 h-full w-[var(--sidebar-width)] flex-shrink-0">
+                <AppSidebar />
+              </div>
+              
+              {/* Main Content */}
+              <main className="flex-1 ml-[var(--sidebar-width)]">
+                {children}
               </main>
             </div>
           </SidebarProvider>

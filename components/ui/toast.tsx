@@ -116,6 +116,8 @@ type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>
 
 type ToastActionElement = React.ReactElement<typeof ToastAction>
 
+console.error("Clerk error occurred")
+
 export {
   type ToastProps,
   type ToastActionElement,
