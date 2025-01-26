@@ -20,6 +20,10 @@ export async function POST(req: Request) {
       return new Response("Unauthorized", { status: 401 })
     }
 
+    // Ensure user is synced first
+    await fetch("/api/auth/sync", { method: "POST" })
+
+    // Rest of the upload logic...
     const formData = await req.formData()
     const file = formData.get("video") as File
     const title = formData.get("title") as string
@@ -49,6 +53,8 @@ export async function POST(req: Request) {
           description,
           url: blob.url,
           embedding,
+          thumbnail_url: null, // TODO: Generate thumbnail
+          duration: 0, // TODO: Extract duration
         }
       ])
       .select()

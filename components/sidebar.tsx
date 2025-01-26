@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, Compass, Users, Upload, Activity, MessageCircle, Video, User } from "lucide-react"
+import { Home, Compass, Users, Upload, Activity, MessageCircle, Video, User, Settings } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
@@ -36,6 +36,11 @@ const menuItems = [
     label: "LIVE",
     href: "/live",
     icon: Video
+  },
+  {
+    label: "Studio",
+    href: "/studio",
+    icon: Settings
   }
 ]
 
