@@ -1,14 +1,8 @@
 import { NextResponse } from "next/server"
-import { put } from "@vercel/blob"
 import { currentUser } from "@clerk/nextjs/server"
-import { createClient } from "@supabase/supabase-js"
+import { put } from "@vercel/blob"
+import { supabase } from "@/lib/supabase"
 import { GoogleGenerativeAI } from "@google/generative-ai"
-
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 // Initialize Google Gemini
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!)
@@ -16,36 +10,50 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!)
 export async function POST(req: Request) {
   try {
     const user = await currentUser()
+    console.log("User:", user) // Debug log
+
     if (!user) {
-      return new Response("Unauthorized", { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Ensure user is synced first
-    await fetch("/api/auth/sync", { method: "POST" })
-
-    // Rest of the upload logic...
     const formData = await req.formData()
+    console.log("Form data received") // Debug log
+
     const file = formData.get("video") as File
     const title = formData.get("title") as string
     const description = formData.get("description") as string
 
+    console.log("Received data:", { 
+      fileName: file?.name,
+      title,
+      description 
+    }) // Debug log
+
     if (!file || !title) {
-      return new Response("Missing required fields", { status: 400 })
+      return NextResponse.json(
+        { error: "Missing required fields", fields: { file: !!file, title: !!title } },
+        { status: 400 }
+      )
     }
 
     // Upload to Vercel Blob
+    console.log("Starting Vercel Blob upload") // Debug log
     const blob = await put(file.name, file, {
-      access: "public",
+      access: 'public',
     })
+    console.log("Blob upload successful:", blob.url) // Debug log
 
-    // Generate embedding using Gemini
+    // Generate embedding
+    console.log("Starting embedding generation") // Debug log
     const model = genAI.getGenerativeModel({ model: "gemini-pro" })
-    const result = await model.generateContent(`${title} ${description}`)
-    const embedding = await result.response.text()
+    const result = await model.generateContent(description || title)
+    const embedding = result.response.text()
+    console.log("Embedding generated") // Debug log
 
-    // Create video record in Supabase
+    // Save to Supabase
+    console.log("Saving to Supabase") // Debug log
     const { data, error } = await supabase
-      .from('tiktok_videos')
+      .from("tiktok_videos")
       .insert([
         {
           user_id: user.id,
@@ -53,8 +61,11 @@ export async function POST(req: Request) {
           description,
           url: blob.url,
           embedding,
-          thumbnail_url: null, // TODO: Generate thumbnail
-          duration: 0, // TODO: Extract duration
+          thumbnail_url: null,
+          duration: 0,
+          views_count: 0,
+          likes_count: 0,
+          comments_count: 0,
         }
       ])
       .select()
@@ -62,13 +73,17 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("Supabase error:", error)
-      return new Response("Database error", { status: 500 })
+      return NextResponse.json({ error: "Database error", details: error }, { status: 500 })
     }
 
+    console.log("Video saved successfully:", data)
     return NextResponse.json(data)
   } catch (error) {
     console.error("Upload error:", error)
-    return new Response("Upload failed", { status: 500 })
+    return NextResponse.json(
+      { error: "Upload failed", details: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    )
   }
 }
 

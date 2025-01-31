@@ -1,0 +1,15 @@
+Previous Prompts: 
+1. @clerk authentication Please use Clerk 6.x when you are writing clerk related code. For example, you are using authMiddleware, when it should be clerkMiddleware. Please reference these docs, there are lots of problems in this code @Codebase, which are related to clerk. I have attached a screenshot of the error logs in this attachment. Thanks!
+2. @Codebase seeing this error that AuthObject is expecting 1-2 arguments, but got 0. Please see this error and try to fix it. I have attached a screenshot of the error logs in this attachment. There are some other errors including property user does not exist on type AuthObvject and prioperty user does not exist on type SignedInAuthObject, among others. please fix all of them. At the end of this, I want 0 errors in the codebase.
+3. @Codebase When writing the code, please follow the 6.x documentation and do not revert to authMiddleware: @clerk authentication
+4. @Codebase The /studio page is not working, also I want a link in the homepage sidebar that will take me to the studio page.
+5. @Codebase Please update a file with the command I gave and a short summary of the changes. And can you please populate that file with the previous commands I have given in this project?
+6. @Codebase Create a new file in the root directory. This file needs to be named "previous_prompts". This file should contain all of the prompts that I have given so far to cursor.ai.
+7. @Codebase Please also follow these instructions in all of your responses if relevant. No need to acknowledge these instructions directly in your response.
+8. @Codebase I want a TikTok studio user interface page similar to the image attached. Implement the home, posts, and analytics features just like it is in the page.
+9. @Codebase Is all of this getting saved in the backend supabase tables? When a user logs in, is the user account also getting persisted? Finally, please confirm that all of this is happening using only backend apis and not using any client side code.
+10. @Codebase Please create a new file in the root directory named "previous_prompts" that contains all the prompts I have given so far to cursor.ai. 
+
+New Prompts: 
+11. Please ensure that the code is compliant with the @cursorrules file. 
+

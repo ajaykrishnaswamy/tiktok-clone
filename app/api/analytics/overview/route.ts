@@ -14,6 +14,7 @@ export async function GET() {
       .from("tiktok_videos")
       .select(`
         id,
+        title,
         views_count,
         likes_count,
         comments_count,
