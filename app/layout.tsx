@@ -4,6 +4,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/sidebar"
+import { AuthSync } from '@/components/auth/auth-sync'
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -19,6 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
+      <AuthSync />
       <html lang="en">
         <body className={inter.className}>
           <SidebarProvider>

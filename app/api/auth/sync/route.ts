@@ -6,30 +6,49 @@ export async function POST() {
   try {
     const user = await currentUser()
     if (!user) {
-      return new Response("Unauthorized", { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Sync user to Supabase
-    const { data, error } = await supabase
+    // Generate a username if not provided
+    const generateUsername = () => {
+      if (user.username) return user.username
+      if (user.emailAddresses[0]?.emailAddress) {
+        return user.emailAddresses[0].emailAddress.split('@')[0]
+      }
+      return `user_${user.id.slice(-8)}`
+    }
+
+    // Check if user already exists in Supabase
+    const { data: existingUser } = await supabase
       .from("tiktok_users")
-      .upsert({
-        id: user.id,
-        username: user.username || `user_${user.id}`,
-        email: user.emailAddresses[0].emailAddress,
-        avatar_url: user.imageUrl,
-        updated_at: new Date().toISOString()
-      })
-      .select()
+      .select("*")
+      .eq("id", user.id)
       .single()
 
-    if (error) {
-      console.error("Failed to sync user:", error)
-      return new Response("Failed to sync user", { status: 500 })
+    if (!existingUser) {
+      const { error: insertError } = await supabase
+        .from("tiktok_users")
+        .insert({
+          id: user.id,
+          username: generateUsername(),
+          email: user.emailAddresses[0]?.emailAddress,
+          avatar_url: user.imageUrl,
+          bio: "",
+          created_at: new Date(user.createdAt).toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+
+      if (insertError) {
+        return NextResponse.json({ error: "Failed to sync user" }, { status: 500 })
+      }
     }
 
-    return NextResponse.json(data)
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Auth sync error:", error)
-    return new Response("Auth sync failed", { status: 500 })
+    return NextResponse.json(
+      { error: "Sync failed", details: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    )
   }
 } 
