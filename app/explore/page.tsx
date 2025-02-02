@@ -1,58 +1,62 @@
-"use client"
+import { Suspense } from "react"
+import { VideoGrid, VideoGridSkeleton } from "@/components/video-grid"
 
-import { useState } from "react"
-import { Search } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
-import { cn } from "@/lib/utils"
-import { VideoGrid } from "@/components/video-grid"
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
 
-const categories = [
-  "All",
-  "Singing & Dancing",
-  "Comedy",
-  "Sports",
-  "Anime & Comics",
-  "Relationship",
-  "Shows",
-  "Lipsync",
-  "Daily Life",
-  "Beauty Care",
-  "Games",
-  "Society",
-  "Outfit",
-  "Cars",
-  "Food",
-]
+async function getVideos() {
+  try {
+    const res = await fetch('http://localhost:3000/api/videos', {
+      method: 'GET',
+      cache: 'no-store',
+      headers: {
+        'Accept': 'application/json',
+      },
+      next: { revalidate: 0 }
+    })
 
-const videos = [
-  {
-    id: "1",
-    thumbnail: "https://i.imgur.com/1.jpg",
-    views: "1.9M",
-    username: "user1",
-    description: "When you think the locals are being nice but they're making you a target",
-    avatar: "/placeholder.svg",
-  },
-  {
-    id: "2",
-    thumbnail: "https://i.imgur.com/2.jpg",
-    views: "2.3M",
-    username: "user2",
-    description: "He is a tall king",
-    avatar: "/placeholder.svg",
-  },
-  // Add more video data...
-]
+    if (!res.ok) {
+      const text = await res.text()
+      console.error('API Error:', text)
+      return []
+    }
+
+    const contentType = res.headers.get('content-type')
+    if (!contentType?.includes('application/json')) {
+      console.error('Invalid content type:', contentType)
+      return []
+    }
+
+    const data = await res.json()
+    return Array.isArray(data) ? data : []
+  } catch (error) {
+    console.error('Error fetching videos:', error)
+    return []
+  }
+}
 
 export default function ExplorePage() {
-  const [activeCategory, setActiveCategory] = useState("All")
-
   return (
     <div className="container mx-auto py-6">
       <h1 className="text-2xl font-bold mb-6">Explore</h1>
-      <VideoGrid />
+      <Suspense fallback={<VideoGridSkeleton />}>
+        <ExploreContent />
+      </Suspense>
     </div>
   )
+}
+
+async function ExploreContent() {
+  const videos = await getVideos()
+  
+  if (!videos.length) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-muted-foreground">No videos found. Try uploading some videos first!</p>
+      </div>
+    )
+  }
+
+  return <VideoGrid videos={videos} />
 }
 

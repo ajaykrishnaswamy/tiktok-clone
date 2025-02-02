@@ -1,38 +1,55 @@
-import { currentUser } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
 
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+
 export async function GET() {
   try {
-    const user = await currentUser()
-    if (!user) {
-      return new Response("Unauthorized", { status: 401 })
-    }
-
     const { data: videos, error } = await supabase
-      .from("tiktok_videos")
+      .from('tiktok_videos')
       .select(`
-        id,
-        title,
-        description,
-        url,
-        views_count,
-        likes_count,
-        comments_count,
-        created_at
+        *,
+        tiktok_users (
+          id,
+          username,
+          avatar_url
+        )
       `)
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
+      .order('created_at', { ascending: false })
 
     if (error) {
-      console.error("Database error:", error)
-      return new Response("Failed to fetch videos", { status: 500 })
+      console.error('Supabase error:', error)
+      return new NextResponse(
+        JSON.stringify({ error: error.message }),
+        {
+          status: 500,
+          headers: {
+            'content-type': 'application/json',
+          },
+        }
+      )
     }
 
-    console.log('Fetched videos from DB:', videos) // Debug log
-    return NextResponse.json(videos)
+    return new NextResponse(
+      JSON.stringify(videos || []),
+      {
+        status: 200,
+        headers: {
+          'content-type': 'application/json',
+        },
+      }
+    )
   } catch (error) {
-    console.error("Error fetching videos:", error)
-    return new Response("Failed to fetch videos", { status: 500 })
+    console.error('Server error:', error)
+    return new NextResponse(
+      JSON.stringify({ error: 'Internal Server Error' }),
+      {
+        status: 500,
+        headers: {
+          'content-type': 'application/json',
+        },
+      }
+    )
   }
 } 
