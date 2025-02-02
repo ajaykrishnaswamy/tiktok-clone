@@ -1,45 +1,40 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
-import { Heart, MessageCircle, Share2, Bookmark } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useEffect, useRef, useState } from "react"
+import { Heart, MessageCircle, Share2 } from "lucide-react"
+import { cn } from "@/lib/utils"
+import Image from "next/image"
 
-interface VideoPlayerProps {
-  video: {
+interface Video {
+  id: string
+  url: string
+  thumbnail_url: string | null
+  title: string
+  description: string | null
+  tiktok_users: {
     id: string
-    url: string
-    title: string
-    description: string
-    user: {
-      name: string
-      image: string
-    }
-    likes: number
-    comments: number
-    shares: number
-  }
-  isActive?: boolean
+    username: string
+    avatar_url: string
+  }[]
 }
 
-export function VideoPlayer({ video, isActive = false }: VideoPlayerProps) {
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [isLiked, setIsLiked] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+interface VideoPlayerProps {
+  video: Video
+  isActive: boolean
+}
+
+export function VideoPlayer({ video, isActive }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
 
   useEffect(() => {
-    if (videoRef.current) {
-      if (isActive) {
-        videoRef.current.play().catch(() => {
-          // Autoplay might be blocked, show play button
-          setIsPlaying(false)
-        })
-      } else {
-        videoRef.current.pause()
-        setIsPlaying(false)
-      }
+    if (isActive && videoRef.current) {
+      videoRef.current.currentTime = 0
+      videoRef.current.play()
+      setIsPlaying(true)
+    } else if (!isActive && videoRef.current) {
+      videoRef.current.pause()
+      setIsPlaying(false)
     }
   }, [isActive])
 
@@ -48,113 +43,81 @@ export function VideoPlayer({ video, isActive = false }: VideoPlayerProps) {
       if (isPlaying) {
         videoRef.current.pause()
       } else {
-        videoRef.current.play().catch(() => {
-          setError("Failed to play video")
-        })
+        videoRef.current.play()
       }
       setIsPlaying(!isPlaying)
     }
   }
 
-  const handleLike = async () => {
-    setIsLiked(!isLiked)
-  }
-
-  const handleError = () => {
-    setError("Failed to load video")
-    setIsLoading(false)
-  }
-
-  const handleLoadedData = () => {
-    setIsLoading(false)
-    setError(null)
-  }
+  const user = video.tiktok_users[0]
 
   return (
-    <div className="relative h-full w-full bg-black">
-      {/* Video Element */}
+    <div className="relative h-full bg-black">
+      {/* Video */}
       <video
         ref={videoRef}
+        src={video.url}
         className="h-full w-full object-contain"
         loop
-        muted
         playsInline
         onClick={togglePlay}
-        onError={handleError}
-        onLoadedData={handleLoadedData}
-        poster="/placeholder.svg"
-      >
-        <source src={video.url} type="video/mp4" />
-      </video>
+      />
 
-      {/* Loading State */}
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white" />
-        </div>
-      )}
+      {/* Overlay */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent">
+        <div className="flex items-end justify-between text-white">
+          {/* Video Info */}
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              {user?.avatar_url && (
+                <Image
+                  src={user.avatar_url}
+                  alt={user.username}
+                  width={40}
+                  height={40}
+                  className="rounded-full"
+                />
+              )}
+              <span className="font-semibold">@{user?.username}</span>
+            </div>
+            <p className="line-clamp-2">{video.title}</p>
+          </div>
 
-      {/* Error State */}
-      {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <div className="text-white text-center p-4">
-            <p>{error}</p>
-            <button
-              onClick={() => {
-                setError(null)
-                setIsLoading(true)
-                if (videoRef.current) {
-                  videoRef.current.load()
-                }
-              }}
-              className="mt-4 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20"
-            >
-              Retry
+          {/* Actions */}
+          <div className="flex flex-col gap-4 items-center ml-4">
+            <button className="p-2 hover:text-red-500">
+              <Heart size={24} />
+            </button>
+            <button className="p-2">
+              <MessageCircle size={24} />
+            </button>
+            <button className="p-2">
+              <Share2 size={24} />
             </button>
           </div>
         </div>
-      )}
-
-      {/* Video Controls */}
-      <div className="absolute right-4 bottom-20 flex flex-col items-center gap-6">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="rounded-full bg-black/20 backdrop-blur-sm text-white hover:bg-black/40 w-12 h-12"
-          onClick={handleLike}
-        >
-          <Heart className={`h-6 w-6 ${isLiked ? "fill-red-500 text-red-500" : ""}`} />
-        </Button>
-        <span className="text-white text-sm font-medium">{video.likes}</span>
-
-        <Button variant="ghost" size="icon" className="rounded-full bg-black/20 text-white hover:bg-black/40 w-12 h-12">
-          <MessageCircle className="h-6 w-6" />
-        </Button>
-        <span className="text-white text-sm font-medium">{video.comments}</span>
-
-        <Button variant="ghost" size="icon" className="rounded-full bg-black/20 text-white hover:bg-black/40 w-12 h-12">
-          <Share2 className="h-6 w-6" />
-        </Button>
-        <span className="text-white text-sm font-medium">{video.shares}</span>
-
-        <Button variant="ghost" size="icon" className="rounded-full bg-black/20 text-white hover:bg-black/40 w-12 h-12">
-          <Bookmark className="h-6 w-6" />
-        </Button>
       </div>
 
-      {/* Video Info */}
-      <div className="absolute bottom-8 left-4 right-16 text-white">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-12 w-12 border-2 border-white">
-            <AvatarImage src={video.user.image} />
-            <AvatarFallback>{video.user.name[0]}</AvatarFallback>
-          </Avatar>
-          <div>
-            <h3 className="font-semibold">{video.user.name}</h3>
-            <p className="text-sm opacity-90">{video.description}</p>
+      {/* Play/Pause Indicator */}
+      {!isPlaying && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="bg-black/50 rounded-full p-4">
+            <svg
+              className="w-8 h-8 text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+              />
+            </svg>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

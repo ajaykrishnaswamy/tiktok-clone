@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from "react"
 import { VideoPlayer } from "@/components/video-player"
+import { Suspense } from "react"
+import { VideoFeed } from "@/components/video-feed"
+import { VideoFeedSkeleton } from "@/components/video-feed"
 
 // Using publicly available video samples
 const sampleVideos = [
@@ -46,52 +49,53 @@ const sampleVideos = [
   },
 ]
 
-export default function Home() {
-  const [videos, setVideos] = useState(sampleVideos)
-  const [currentVideoIndex, setCurrentVideoIndex] = useState(0)
-  const containerRef = useRef<HTMLDivElement>(null)
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (containerRef.current) {
-        const scrollTop = containerRef.current.scrollTop
-        const videoHeight = containerRef.current.clientHeight
-        const index = Math.round(scrollTop / videoHeight)
-        setCurrentVideoIndex(index)
-      }
+async function getVideos() {
+  try {
+    const res = await fetch('http://localhost:3000/api/videos', {
+      method: 'GET',
+      cache: 'no-store',
+      headers: {
+        'Accept': 'application/json',
+      },
+      next: { revalidate: 0 }
+    })
+
+    if (!res.ok) {
+      throw new Error('Failed to fetch videos')
     }
 
-    const container = containerRef.current
-    if (container) {
-      container.addEventListener("scroll", handleScroll)
-    }
+    const videos = await res.json()
+    return Array.isArray(videos) ? videos : []
+  } catch (error) {
+    console.error('Error fetching videos:', error)
+    return []
+  }
+}
 
-    return () => {
-      if (container) {
-        container.removeEventListener("scroll", handleScroll)
-      }
-    }
-  }, [])
-
+export default function HomePage() {
   return (
-    <div className="max-w-3xl mx-auto">
-      <div
-        ref={containerRef}
-        className="h-[calc(100vh-theme(spacing.16))] overflow-y-scroll snap-y snap-mandatory"
-      >
-        {videos.map((video, index) => (
-          <div 
-            key={video.id} 
-            className="h-full snap-start snap-always"
-          >
-            <VideoPlayer 
-              video={video} 
-              isActive={currentVideoIndex === index} 
-            />
-          </div>
-        ))}
-      </div>
+    <div className="flex flex-col items-center py-6">
+      <Suspense fallback={<VideoFeedSkeleton />}>
+        <HomeContent />
+      </Suspense>
     </div>
   )
+}
+
+async function HomeContent() {
+  const videos = await getVideos()
+  
+  if (!videos.length) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-muted-foreground">No videos found. Try uploading some videos first!</p>
+      </div>
+    )
+  }
+
+  return <VideoFeed videos={videos} />
 }
 
