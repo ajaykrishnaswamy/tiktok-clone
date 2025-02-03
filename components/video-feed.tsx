@@ -51,7 +51,7 @@ export function VideoFeed({ videos }: VideoFeedProps) {
     <div className="max-w-3xl mx-auto w-full">
       <div
         ref={containerRef}
-        className="h-[calc(100vh-theme(spacing.16))] overflow-y-scroll snap-y snap-mandatory"
+        className="h-[calc(100vh-theme(spacing.16))] overflow-y-scroll snap-y snap-mandatory hide-scrollbar"
       >
         {videos.map((video, index) => (
           <div 

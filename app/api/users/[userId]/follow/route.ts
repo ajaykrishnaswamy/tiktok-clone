@@ -4,22 +4,27 @@ import { NextResponse } from "next/server"
 
 export async function POST(
   request: Request,
-  { params }: { params: { videoId: string } }
+  { params }: { params: { userId: string } }
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
-    const { videoId } = params
+    const { userId } = params
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return new NextResponse("Unauthorized", { status: 401 })
     }
 
+    // Don't allow following yourself
+    if (user.id === userId) {
+      return new NextResponse("Cannot follow yourself", { status: 400 })
+    }
+
     const { error } = await supabase
-      .from('video_likes')
+      .from('user_follows')
       .insert({
-        video_id: videoId,
-        user_id: user.id,
+        follower_id: user.id,
+        following_id: userId,
         created_at: new Date().toISOString()
       })
 
@@ -27,7 +32,7 @@ export async function POST(
       return new NextResponse(error.message, { status: 500 })
     }
 
-    return new NextResponse("Liked", { status: 200 })
+    return new NextResponse("Followed", { status: 200 })
   } catch (error) {
     return new NextResponse("Internal Server Error", { status: 500 })
   }
@@ -35,11 +40,11 @@ export async function POST(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { videoId: string } }
+  { params }: { params: { userId: string } }
 ) {
   try {
     const supabase = createRouteHandlerClient({ cookies })
-    const { videoId } = params
+    const { userId } = params
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -47,15 +52,15 @@ export async function DELETE(
     }
 
     const { error } = await supabase
-      .from('video_likes')
+      .from('user_follows')
       .delete()
-      .match({ video_id: videoId, user_id: user.id })
+      .match({ follower_id: user.id, following_id: userId })
 
     if (error) {
       return new NextResponse(error.message, { status: 500 })
     }
 
-    return new NextResponse("Unliked", { status: 200 })
+    return new NextResponse("Unfollowed", { status: 200 })
   } catch (error) {
     return new NextResponse("Internal Server Error", { status: 500 })
   }
