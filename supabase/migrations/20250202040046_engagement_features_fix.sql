@@ -104,12 +104,21 @@ create policy "Users can delete their own comments"
   on video_comments for delete
   using (auth.uid()::text = user_id);
 
+-- Add RLS policies for user_preferences
 create policy "Users can view their own preferences"
   on user_preferences for select
   using (auth.uid()::text = user_id);
 
+create policy "Users can insert their own preferences"
+  on user_preferences for insert
+  with check (auth.uid()::text = user_id);
+
 create policy "Users can update their own preferences"
   on user_preferences for update
+  using (auth.uid()::text = user_id);
+
+create policy "Users can delete their own preferences"
+  on user_preferences for delete
   using (auth.uid()::text = user_id);
 
 create policy "Users can view their own watch history"

@@ -1,7 +1,9 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import { VideoPlayer } from "@/components/video-player"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@clerk/nextjs"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { Suspense } from "react"
 import { VideoFeed } from "@/components/video-feed"
 import { VideoFeedSkeleton } from "@/components/video-feed"
@@ -54,7 +56,7 @@ export const fetchCache = 'force-no-store'
 
 async function getVideos() {
   try {
-    const res = await fetch('http://localhost:3000/api/videos', {
+    const res = await fetch('/api/videos', {
       method: 'GET',
       cache: 'no-store',
       headers: {
@@ -76,6 +78,38 @@ async function getVideos() {
 }
 
 export default function HomePage() {
+  const { isLoaded, userId } = useAuth()
+  const router = useRouter()
+  const supabase = createClientComponentClient()
+
+  useEffect(() => {
+    async function checkOnboarding() {
+      if (!userId) return
+
+      const { data: preferences } = await supabase
+        .from('user_preferences')
+        .select('id')
+        .eq('user_id', userId)
+        .single()
+
+      if (!preferences) {
+        router.push('/onboarding')
+      }
+    }
+
+    if (isLoaded) {
+      if (!userId) {
+        router.push('/sign-in')
+      } else {
+        checkOnboarding()
+      }
+    }
+  }, [isLoaded, userId, router, supabase])
+
+  if (!isLoaded || !userId) {
+    return null
+  }
+
   return (
     <div className="flex flex-col items-center py-6">
       <Suspense fallback={<VideoFeedSkeleton />}>
